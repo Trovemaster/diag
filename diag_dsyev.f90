@@ -14,16 +14,18 @@
 
 !---------------!
  program diatest
+
 !---------------!
  implicit none
 
  integer :: i,j,n,info
  real(8), allocatable :: m0(:,:),m1(:,:),m2(:,:),eig(:)
- real(8) :: elem
+ real(8) :: elem,t1,t2
 
  logical :: gen_mat = .true.
  integer :: mat_len
- integer(8)	::	seed(1000000)
+ integer(8) :: seed(1000000)
+ integer :: verbose = 1
 
 
  open(10,file='mat.dat',status='old')
@@ -65,31 +67,43 @@
 
  m1(:,:)=m0(:,:)
 
+ t1 = get_real_time()
+
  call diasym(m1,eig,n)
+
+ t2 = get_real_time()
    
  open(10,file='dia.dat',status='replace')
  write(10,*)'Eigenvalues:'
  do i=1,n
     write(10,10)i,eig(i)
-    10 format(I3,'   ',f14.8)
- enddo
- write(10,*)
- write(10,*)'Eigenvectors:'
- do i=1,n
-    write(10,20)i,m1(:,i)
-    20 format(i3,'   ',100f14.8)
+    10 format(I5,'   ',f15.8)
  enddo
  write(10,*)
  
+ if (verbose>=4) then 
+  write(10,*)'Eigenvectors:'
+  do i=1,n
+     write(10,20)i,m1(:,i)
+     20 format(i3,'   ',100f14.8)
+  enddo
+  write(10,*)
+ endif
+  
  m2=matmul(transpose(m1),m0)
  m0=matmul(m2,m1)
 
- write(10,*)'Transformed matrix (check):'
- do i=1,n
-    write(10,30)m0(:,i)
-    30 format(100(1x,g15.8))
- enddo
- write(10,*)
+ if (verbose>=4) then 
+   write(10,*)'Transformed matrix (check):'
+   do i=1,n
+      write(10,30)m0(:,i)
+      30 format(100(1x,g15.8))
+   enddo
+   write(10,*)
+ endif
+ !
+ write(10,"('Time = ',f12.1,' s')") t2-t1
+ !
 
  close(10)
 
@@ -98,11 +112,32 @@
  contains 
   !
   integer(8) function  rrr(i)
-   integer(8)	::	i
+   integer :: i
    seed(i) = mod((1103515245 * seed(i) + 12345),1099511627776);
    rrr=seed(i)
    return
   end function rrr
+  !
+  function get_real_time() result(t)
+    real(8) :: t
+    !
+    integer         :: count, count_rate, count_max
+    real(8), save :: overflow   =  0
+    integer, save   :: last_count = -1
+    !
+    call system_clock(count,count_rate,count_max)
+    !
+    ! Try to detect a rollover
+    !
+    if (count<last_count) then
+      overflow = overflow + count_max
+    end if
+    last_count = count
+    !
+    ! Convert to seconds
+    !
+    t = (overflow+count)/count_rate
+  end function get_real_time
   !
  end program diatest
 !-------------------!
