@@ -28,8 +28,9 @@
  integer :: verbose = 1
 
 
- open(10,file='mat.dat',status='old')
- read(10,*) n
+ !open(10,file='mat.dat',status='old')
+ !
+ read(5,*) n
  allocate (m0(n,n))
  allocate (m1(n,n))
  allocate (m2(n,n))
@@ -42,7 +43,7 @@
  i = 0 ; j=0
  !
  do while(.true.)
-   read( 10, *, iostat=info ) i, j, elem
+   read( 5, *, iostat=info ) i, j, elem
    if ( info /= 0 ) exit   ! exit loop when reach EOF
    m0(i,j) = elem
    m0(j,i) = elem
@@ -63,7 +64,7 @@
    enddo
    !
  end if 
- close(10)
+ !close(10)
 
  m1(:,:)=m0(:,:)
 
@@ -73,39 +74,40 @@
 
  t2 = get_real_time()
    
- open(10,file='dia.dat',status='replace')
- write(10,*)'Eigenvalues:'
+ !open(10,file='dia.dat',status='replace')
+ !
+ write(6,*)'Eigenvalues:'
  do i=1,n
-    write(10,10)i,eig(i)
+    write(6,10)i,eig(i)
     10 format(I5,'   ',f15.8)
  enddo
- write(10,*)
+ write(6,*)
  
  if (verbose>=4) then 
-  write(10,*)'Eigenvectors:'
+  write(6,*)'Eigenvectors:'
   do i=1,n
-     write(10,20)i,m1(:,i)
+     write(6,20)i,m1(:,i)
      20 format(i3,'   ',100f14.8)
   enddo
-  write(10,*)
+  write(6,*)
  endif
   
  m2=matmul(transpose(m1),m0)
  m0=matmul(m2,m1)
 
  if (verbose>=4) then 
-   write(10,*)'Transformed matrix (check):'
+   write(6,*)'Transformed matrix (check):'
    do i=1,n
-      write(10,30)m0(:,i)
+      write(6,30)m0(:,i)
       30 format(100(1x,g15.8))
    enddo
-   write(10,*)
+   write(6,*)
  endif
  !
- write(10,"('Time = ',f12.1,' s')") t2-t1
+ write(6,"('Time = ',f12.1,' s')") t2-t1
  !
 
- close(10)
+ !close(10)
 
  deallocate(m0); deallocate(m1); deallocate(m2);  deallocate(eig)
  !
